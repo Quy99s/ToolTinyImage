@@ -1,0 +1,62 @@
+{
+  "name": "tool-tiny-image",
+  "version": "1.0.0",
+  "description": "Tool để nén ảnh bằng TinyPNG với cấu trúc thư mục tương tự",
+  "main": "src/gui/main.js",
+  "scripts": {
+    "start": "electron .",
+    "gui": "node app.js", 
+    "cli": "node cli.js",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build-mac": "electron-builder --mac",
+    "build-win": "electron-builder --win",
+    "pack": "electron-builder --dir"
+  },
+  "keywords": [
+    "tinypng",
+    "image",
+    "compression",
+    "optimization"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "dotenv": "^16.6.1",
+    "fs-extra": "^11.1.1",
+    "ora": "^5.4.1",
+    "tinify": "^1.7.0"
+  },
+  "devDependencies": {
+    "electron": "^27.3.11",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.tinyimage.app",
+    "productName": "Tool Tiny Image",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app.js",
+      "cli.js", 
+      "src/**/*",
+      "lib/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.graphics-design"
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Graphics"
+    }
+  }
+}

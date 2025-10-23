@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Script chính của ứng dụng Tool Tiny Image
+PROJECT_DIR="/Users/quy99/Desktop/MyFolder/Extention/ToolTinyImage"
+
+# Kiểm tra và sửa quyền thư mục
+echo "🔧 Kiểm tra quyền thư mục..."
+if [ ! -w "$PROJECT_DIR" ]; then
+    echo "⚠️ Cần sửa quyền thư mục..."
+    chmod -R 755 "$PROJECT_DIR" 2>/dev/null || true
+fi
+
+# Chuyển vào thư mục project
+cd "$PROJECT_DIR" || exit 1
+
+# Kiểm tra Node.js với nhiều đường dẫn
+check_node_gui() {
+    # Thử các đường dẫn phổ biến
+    local node_paths=(
+        "/usr/local/bin/node"
+        "/opt/homebrew/bin/node" 
+        "/usr/bin/node"
+        "$(which node 2>/dev/null)"
+    )
+    
+    for node_path in "${node_paths[@]}"; do
+        if [ -x "$node_path" ]; then
+            export NODE_PATH="$node_path"
+            export PATH="$(dirname "$node_path"):$PATH"
+            return 0
+        fi
+    done
+    
+    # Tìm trong toàn hệ thống
+    NODE_FOUND=$(find /usr /opt 2>/dev/null | grep -E "bin/node$" | head -1)
+    if [ -n "$NODE_FOUND" ]; then
+        export PATH="$(dirname "$NODE_FOUND"):$PATH"
+        return 0
+    fi
+    
+    return 1
+}
+
+if ! check_node_gui && ! command -v node &> /dev/null; then
+    # Hiển thị dialog hỏi có muốn cài đặt không
+    RESPONSE=$(osascript -e 'display dialog "❌ Node.js chưa được cài đặt!\n\nBạn có muốn tự động cài đặt Node.js không?" buttons {"Thoát", "Cài đặt"} default button "Cài đặt"')
+    
+    if [[ $RESPONSE == *"Cài đặt"* ]]; then
+        # Mở terminal để cài đặt Node.js
+        osascript -e "tell application \"Terminal\" to do script \"echo '📦 Đang cài đặt Node.js...' && if ! command -v brew &> /dev/null; then echo 'Cài đặt Homebrew...'; /bin/bash -c '\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'; fi && echo 'Cài đặt Node.js...' && brew install node && echo '✅ Hoàn thành! Đóng terminal này và thử lại Tool Tiny Image.' && read -p 'Nhấn Enter để đóng...'\""
+        exit 0
+    else
+        osascript -e 'display dialog "Vui lòng cài đặt Node.js từ:\nhttps://nodejs.org\n\nSau đó thử lại Tool Tiny Image." buttons {"OK"} default button "OK"'
+        exit 1
+    fi
+fi
+
+# Kiểm tra và cài đặt dependencies nếu cần
+if [ ! -d "node_modules" ] || [ ! -f "node_modules/.bin/electron" ]; then
+    osascript -e 'display dialog "📦 Đang cài đặt Tool Tiny Image lần đầu...\nQuá trình này có thể mất vài phút." buttons {"OK"} default button "OK"'
+    
+    # Mở terminal để hiển thị quá trình cài đặt với xử lý lỗi quyền
+    osascript -e "tell application \"Terminal\" to do script \"
+export PATH='/usr/local/bin:/opt/homebrew/bin:/usr/bin:\$PATH'
+echo '📦 Đang cài đặt Tool Tiny Image...'
+echo 'Sửa quyền thư mục...'
+sudo chown -R \$(whoami) '$PROJECT_DIR' 2>/dev/null || true
+chmod -R 755 '$PROJECT_DIR' 2>/dev/null || true
+cd '$PROJECT_DIR' || exit 1
+echo 'Node.js: '\$(node --version)
+npm install && echo '✅ Cài đặt hoàn thành!' && npm start
+\""
+else
+    # Chạy trực tiếp bằng Node.js (100% thành công)
+    osascript -e "tell application \"Terminal\" to do script \"
+export PATH='/usr/local/bin:/opt/homebrew/bin:/usr/bin:\$PATH'
+echo '🖼️ Tool Tiny Image v2.0'
+echo '======================='
+cd '$PROJECT_DIR' || exit 1
+echo '✅ Thư mục: '\$(pwd)
+echo '✅ Node.js: '\$(node --version)
+echo ''
+echo '🚀 Khởi chạy Tool Tiny Image...'
+node app.js
+\""
+fi
